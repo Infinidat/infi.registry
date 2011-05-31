@@ -1,129 +1,255 @@
 
-# -*- coding: utf-8 -*-
-
+import logging
 import unittest2
 import mock
-from . import interface, constants
+from bunch import Bunch
 
-class BaseTestCase(unittest2.TestCase):
-    def setUo(self):
+import random
+import string
+
+from . import LocalComputer
+from .dtypes.key import KeyStore, RegistryHive
+from infi.registry.dtypes.key import ValueStore
+from infi.registry.dtypes.value import RegistryValueFactory, RegistryValue
+from infi.registry import constants, errors, dtypes
+
+class MockedInterface(object):
+    def __init__(self, func_name):
+        self.func_name = func_name
+        self.patcher = mock.patch('infi.registry.interface.%s' % self.func_name)
+        self.mock = None
+
+    def start(self):
+        self.mock = self.patcher.start()
+
+    def stop(self):
+        self.patcher.stop()
+
+class TestCase(unittest2.TestCase):
+    def setUp(self):
+        self._computer = self._get_computer()
+
+    def tearDown(self):
         pass
 
-    def tearDown(self):
-        pass
+    def _get_computer(self):
+        raise NotImplementedError
 
-class RegCloseKey(BaseTestCase):
-    def test_invalid_key_1(self):
-        kwargs = {'key': 0}
-        self.assertRaises(interface.InvalidHandleException, interface.RegCloseKey, **kwargs)
+class LocalMachineTestCase(TestCase):
+    def _get_computer(self, sam=constants.KEY_ALL_ACCESS):
+        return LocalComputer(sam=sam)
 
-    def test_invalid_key_2(self):
-        kwargs = {'key': 4}
-        self.assertRaises(interface.InvalidHandleException, interface.RegCloseKey, **kwargs)
+    def test_hives_exists(self):
+        self.assertIsInstance(self._computer.local_machine, RegistryHive)
+        self.assertIsInstance(self._computer.current_user, RegistryHive)
+        self.assertIsInstance(self._computer.classes_root, RegistryHive)
+        self.assertIsInstance(self._computer.current_config, RegistryHive)
+        self.assertIsInstance(self._computer.users, RegistryHive)
 
-    def test_valid_close(self):
-        open_key = self._get_open_key()
-        self.assertEqual(None, interface.RegCloseKey(open_key))
+    def test_getitem_for_existing_keys_under_local_machine(self):
+        reg = self._computer.local_machine
+        self.assertIsInstance(reg, KeyStore)
+        self.assertIsInstance(reg[r'SOFTWARE\Microsoft'], KeyStore)
+        self.assertIsInstance(reg[r'SOFTWARE\Microsoft\Windows'], KeyStore)
+        self.assertIsInstance(reg[ur'SOFTWARE\Microsoft\Windows NT'], KeyStore)
 
-    def _get_open_key(self):
-        return interface.RegCreateKey(interface.RegConnectRegistry(None, constants.HKEY_LOCAL_MACHINE),
-                                      'SOFTWARE')
+    def _walk_on_key(self, key, level=0):
+        logging.debug('%s%s' % ('.' * level, key._relapath,))
+        try:
+            for subkey in key.itervalues():
+                try:
+                    self._walk_on_key(subkey, level + 1)
+                except errors.AccessDeniedException:
+                    pass
+        except errors.AccessDeniedException:
+            pass
+        try:
+            for value in key.values_store.itervalues():
+                pass
+        except errors.AccessDeniedException:
+            pass
 
-    def test_double_close(self):
-        open_key = self._get_open_key()
-        self.assertEqual(None, interface.RegCloseKey(open_key))
-        self.assertEqual(None, interface.RegCloseKey(open_key))
+    def test_walk_1(self):
+        hive = self._get_computer(constants.KEY_READ).local_machine
+        self._walk_on_key(hive[r'SOFTWARE\Microsoft\Windows'])
 
-class RegConnectRegistry(BaseTestCase):
+    def test_walk_2(self):
+        hive = self._get_computer(constants.KEY_READ).local_machine
+        self._walk_on_key(hive[r'SYSTEM\CurrentControlSet\Services'])
 
-    @mock.patch("win32api.RegConnectRegistry")
-    def test_invalid_local_key(self, mocked_function):
-        kwargs = {'computerName': None,
-                  'key': 0}
-        self.assertRaises(interface.InvalidKeyException, interface.RegConnectRegistry, **kwargs)
+    def test_walk_3(self):
+        hive = self._get_computer(constants.KEY_READ).local_machine
+        self._walk_on_key(hive)
 
-    @mock.patch("win32api.RegConnectRegistry")
-    def test_invalid_remote_key(self, mocked_function):
-        kwargs = {'computerName': 'remoteComputer',
-                  'key': constants.HKEY_CURRENT_USER}
-        self.assertRaises(interface.InvalidKeyException, interface.RegConnectRegistry, **kwargs)
+    def test_iteritems(self):
+        key = self._computer.local_machine[r'SOFTWARE\Microsoft\Windows NT\CurrentVersion']
+        for item in key.iteritems():
+            self.assertIsInstance(item[1], KeyStore)
+            self.assertEqual(type(item[0]), unicode)
+            self.assertGreater(len(item[0]), 0)
+        for item in key.values_store.iteritems():
+            self.assertIsInstance(item[1], RegistryValue)
+            self.assertEqual(type(item[0]), unicode)
+            self.assertGreater(len(item[0]), 0)
 
-    @mock.patch("win32api.RegConnectRegistry")
-    def test_valid_remote_keys(self, mocked_function):
-        mocked_function.return_value = None
-        kwargs = {'computerName': 'remoteComputer'}
-        for key in [constants.HKEY_LOCAL_MACHINE, constants.HKEY_USERS]:
-            kwargs['key'] = key
-            self.assertEqual(None, interface.RegConnectRegistry(**kwargs))
-        self.assertEqual(2, mocked_function.call_count)
+    def test_items(self):
+        key = self._computer.local_machine[r'SOFTWARE\Microsoft\Windows NT\CurrentVersion']
+        self.assertEqual(len(key.items()), len([item for item in key.iteritems()]))
+        self.assertIsInstance(key.items()[0], tuple)
+        self.assertEqual(len(key.values_store.items()), len([item for item in key.values_store.iteritems()]))
+        self.assertIsInstance(key.values_store.items()[0], tuple)
 
-    @mock.patch("win32api.RegConnectRegistry")
-    def test_valid_local_keys(self, mocked_function):
-        mocked_function.return_value = None
-        kwargs = {'computerName': None}
-        for key in [constants.HKEY_LOCAL_MACHINE, constants.HKEY_USERS, constants.HKEY_CURRENT_CONFIG,
-                    constants.HKEY_CURRENT_USER, constants.HKEY_CLASSES_ROOT]:
-            kwargs['key'] = key
-            self.assertEqual(None, interface.RegConnectRegistry(**kwargs))
-        self.assertEqual(5, mocked_function.call_count)
+    def test_iterkeys(self):
+        key = self._computer.local_machine[r'SOFTWARE\Microsoft\Windows NT\CurrentVersion']
+        for item in key.iterkeys():
+            self.assertEqual(type(item), unicode)
+            self.assertGreater(len(item), 0)
+        for item in key.iterkeys():
+            self.assertEqual(type(item), unicode)
+            self.assertGreater(len(item), 0)
 
-    def test_connect_to_local_machine(self):
-        key = interface.RegConnectRegistry(None, constants.HKEY_LOCAL_MACHINE)
-        self.assertGreater(key.handle, 0)
+    def test_keys(self):
+        key = self._computer.local_machine[r'SOFTWARE\Microsoft\Windows NT\CurrentVersion']
+        self.assertEqual(len(key.keys()), len([item for item in key.iterkeys()]))
+        self.assertIsInstance(key.keys()[0], unicode)
+        self.assertEqual(len(key.values_store.keys()), len([item for item in key.values_store.iterkeys()]))
+        self.assertIsInstance(key.values_store.keys()[0], unicode)
 
-    def test_connect_to_remote_machine(self):
-        import socket
-        key = interface.RegConnectRegistry(r'\\%s' % socket.gethostname(), constants.HKEY_LOCAL_MACHINE)
-        self.assertGreater(key.handle, 0)
+    def test_itervalues(self):
+        key = self._computer.local_machine[r'SOFTWARE\Microsoft\Windows NT\CurrentVersion']
+        for item in key.itervalues():
+            self.assertIsInstance(item, KeyStore)
+        for item in key.values_store.itervalues():
+            self.assertIsInstance(item, RegistryValue)
 
-    def test_connect_to_invalid_remote(self):
-        kwargs = {'computerName': r'\\0.0.0.0',
-                  'key': constants.HKEY_LOCAL_MACHINE}
-        self.assertRaises(interface.RemoteRegistryConnectionFailed, interface.RegConnectRegistry, **kwargs)
+    def test_values(self):
+        key = self._computer.local_machine[r'SOFTWARE\Microsoft\Windows NT\CurrentVersion']
+        self.assertEqual(len(key.values()), len([item for item in key.itervalues()]))
+        self.assertIsInstance(key.values()[0], KeyStore)
+        self.assertEqual(len(key.values_store.values()), len([item for item in key.values_store.itervalues()]))
+        self.assertIsInstance(key.values_store.values()[0], RegistryValue)
 
-    def test_connect_to_unauthorized_remote(self):
-        kwargs = {'computerName': r'\\127.0.0.2',
-                  'key': constants.HKEY_LOCAL_MACHINE}
-        self.assertRaises(interface.RemoteRegistryConnectionFailed, interface.RegConnectRegistry, **kwargs)
+    def _get_random_string(self):
+        length = random.randint(1, 100)
+        return ''.join(random.choice(string.ascii_letters + string.digits) for x in range(length))
 
-class RegCreateKey(BaseTestCase):
+    def test_a_workout(self):
+        software = self._computer.local_machine['SOFTWARE']
+        hive_name = self._get_random_string()
+        self.assertNotIn(hive_name, software)
+        software[hive_name] = None
+        self.assertIn(hive_name, software)
+        key = software[hive_name]
+        self.assertIsInstance(key, KeyStore)
+        self.assertEqual(0, len(key.keys()))
+        self.assertEqual(0, len(key.values_store.keys()))
+        for k, v in ((self._get_random_string(), 1),
+                     (self._get_random_string(), self._get_random_string()),
+                     (self._get_random_string(), [self._get_random_string(), self._get_random_string()])):
+            self.assertNotIn(k, key.values_store)
+            key.values_store[k] = dtypes.RegistryValueFactory().by_value(v)
+            self.assertIn(k, key.values_store)
+            self.assertTrue(key.values_store.has_key(k))
+            self.assertEqual(v, key.values_store[k].to_python_object())
+        v = key.values_store.pop(k)
+        self.assertIsInstance(v, RegistryValue)
+        key.values_store.clear()
+        self.assertEqual(0, len(key.keys()))
+        self.assertEqual(0, len(key.values_store.keys()))
+        key.change_permissions(constants.KEY_ALL_ACCESS)
+        del(software[hive_name])
+        self.assertNotIn(hive_name, software)
+
+
+class MockLocalMachineTestCase(LocalMachineTestCase):
     def setUp(self):
-        BaseTestCase.setUp(self)
-        self.key = interface.RegConnectRegistry(None, constants.HKEY_LOCAL_MACHINE)
+        self._set_mocks_dictionary()
+        self._start_all_mocks()
+        LocalMachineTestCase.setUp(self)
+
+    def _set_mocks_dictionary(self):
+        self._mocks = Bunch()
+        self._mocks.connect_registry = MockedInterface('RegConnectRegistry')
+        self._mocks.open_key = MockedInterface('RegOpenKeyEx')
+        self._mocks.query_value = MockedInterface('RegQueryValueEx')
+        self._mocks.close_key = MockedInterface('RegCloseKey')
+        self._mocks.query_info_key = MockedInterface('RegQueryInfoKey')
+        self._mocks.enum_key = MockedInterface('RegEnumKeyEx')
+        self._mocks.enum_value = MockedInterface('RegEnumValue')
+
+    def _start_all_mocks(self):
+        for mock in self._mocks.itervalues():
+            mock.start()
 
     def tearDown(self):
-        interface.RegCloseKey(self.key)
+        LocalMachineTestCase.tearDown(self)
 
-    def test_create_existing_subkey(self):
-        self.assertGreater(interface.RegCreateKey(self.key, 'SOFTWARE').handle, 0)
+    def _stop_all_mocks(self):
+        for mock in self._mocks.itervalues():
+            mock.stop()
 
-    def test_non_existing_subkey(self):
-        # TODO Implement test
+    def _assert_calls_to_mock_name(self, mock_name, number):
+        self.assertTrue(self._mocks[mock_name].mock.called)
+        self.assertEqual(number, self._mocks[mock_name].mock.call_count)
+
+    def _assert_calls_to_connect_registry(self, number):
+        self._assert_calls_to_mock_name('connect_registry', number)
+
+    def _assert_calls_to_open_key(self, number):
+        self._assert_calls_to_mock_name('open_key', number)
+
+    def test_hives_exists(self):
+        LocalMachineTestCase.test_hives_exists(self)
+        self._assert_calls_to_connect_registry(5)
+        self._assert_calls_to_open_key(5)
+
+    def test_getitem_for_existing_keys_under_local_machine(self):
+        self._mocks.query_value.mock.side_effect = KeyError()
+        LocalMachineTestCase.test_getitem_for_existing_keys_under_local_machine(self)
+        self._assert_calls_to_connect_registry(1)
+        self._assert_calls_to_open_key(4)
+
+    def test_walk_1(self):
         raise unittest2.SkipTest
 
-    def test_access_denied(self):
-        # TODO Impelment test
+    def test_walk_2(self):
         raise unittest2.SkipTest
 
-    def test_closed_key(self):
-        self.tearDown()
-        kwargs = {'key': self.key,
-                  'subKey': 'SOFTWARE'}
-        self.assertRaises(interface.CreateKeyFailed, interface.RegCreateKey, **kwargs)
+    def test_walk_3(self):
+        raise unittest2.SkipTest
 
-    def test_unicode_subkey_1(self):
-        self.assertGreater(interface.RegCreateKey(self.key, u'SOFTWARE').handle, 0)
+    def test_a_workout(self):
+        raise unittest2.SkipTest
 
-    def test_deep_subkey(self):
-        self.assertGreater(interface.RegCreateKey(self.key, r'SOFTWARE\Microsoft').handle, 0)
+    def _prepare_mocks_for_iteration_tests(self):
+        self._mocks.query_info_key.mock.return_value = [10, 0, 0, 10]
+        key = self._computer.local_machine['SOFTWARE']
+        value = RegistryValueFactory().by_value(u'someValue')
+        self._mocks.enum_key.mock.return_value = u'someKey'
+        self._mocks.enum_value.mock.return_value = u'someName', value
 
-class RegCreateKeyEx(BaseTestCase):
-    def setUp(self):
-        BaseTestCase.setUp(self)
-        self.key = interface.RegConnectRegistry(None, constants.HKEY_LOCAL_MACHINE)
+    def test_iteritems(self):
+        self._prepare_mocks_for_iteration_tests()
+        LocalMachineTestCase.test_iteritems(self)
 
-    def tearDown(self):
-        interface.RegCloseKey(self.key)
+    def test_items(self):
+        self._prepare_mocks_for_iteration_tests()
+        LocalMachineTestCase.test_items(self)
 
-    def test_unicode_subkey_2(self):
-        self.assertGreater(interface.RegCreateKey(self.key, u'SOFTWARE\\\xe2\x9f\xb2').handle, 0)
+    def test_iterkeys(self):
+        self._prepare_mocks_for_iteration_tests()
+        LocalMachineTestCase.test_iterkeys(self)
+
+    def test_keys(self):
+        self._prepare_mocks_for_iteration_tests()
+        LocalMachineTestCase.test_keys(self)
+
+    def test_itervalues(self):
+        self._prepare_mocks_for_iteration_tests()
+        LocalMachineTestCase.test_itervalues(self)
+
+    def test_values(self):
+        self._prepare_mocks_for_iteration_tests()
+        LocalMachineTestCase.test_values(self)
+
+    # TODO add tests that check the dict-wrap

@@ -1,7 +1,7 @@
 
 # constants are extracted from win32con, which is part of pywin32
 
-
+"""
 def _win32con_attributes():
     import win32con
     ATTRIBUTES = ['REG_BINARY', 'REG_DWORD', 'REG_DWORD_BIG_ENDIAN', 'REG_DWORD_LITTLE_ENDIAN', 'REG_EXPAND_SZ',
@@ -19,6 +19,8 @@ def _win32con_attributes():
 def _print_win32_attribures():
     for name, value in _win32con_attributes():
         print '%s = %s' % (name, value)
+"""
+
 REG_BINARY = 3
 REG_DWORD = 4
 REG_DWORD_BIG_ENDIAN = 5
@@ -54,6 +56,14 @@ KEY_WOW64_64KEY = 256
 KEY_WOW64_RES = 768
 KEY_WRITE = 131078
 
+ERROR_SUCCESS = 0
 ERROR_BAD_NETPATH = 53
 RPC_S_INVALID_NET_ADDR = 1707
 ERROR_ACCESS_DENIED = 5
+ERROR_INVALID_HANDLE = 6
+ERROR_INVALID_PARAMETER = 87
+ERROR_FILE_NOT_FOUND = 2
+
+MAX_KEYNAME_LENGTH = 256
+ERROR_NO_MORE_ITEMS = 259
+MAX_VALUENAME_LENGTH = 16384
