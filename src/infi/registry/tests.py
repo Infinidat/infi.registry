@@ -156,6 +156,9 @@ class LocalMachineTestCase(TestCase):
         del(software[hive_name])
         self.assertNotIn(hive_name, software)
 
+    def test_clear_key_with_subkeys(self):
+        # TODO implement this important test
+        raise unittest2.SkipTest
 
 class MockLocalMachineTestCase(LocalMachineTestCase):
     def setUp(self):

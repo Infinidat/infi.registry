@@ -201,7 +201,7 @@ class RegDeleteKey(TestCaseLocalMachine):
         interface.RegCloseKey(key)
         kwargs = {'key': self.key,
                   'subKey': 'TestDeleteSubkeyWithSubkeys'}
-        self.assertEqual(None, interface.RegDeleteKey(**kwargs))
+        self._assert_func_raises(errors.AccessDeniedException, kwargs)
 
     def test_delete_subkey_with_values(self):
         key = interface.RegCreateKeyEx(self.key, u'TestDeleteSubKeyWithValues')
