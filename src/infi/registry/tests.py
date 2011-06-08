@@ -71,15 +71,11 @@ class LocalMachineTestCase(TestCase):
 
     def test_walk_1(self):
         hive = self._get_computer(constants.KEY_READ).local_machine
-        self._walk_on_key(hive[r'SOFTWARE\Microsoft\Windows'])
+        self._walk_on_key(hive[r'SOFTWARE'])
 
     def test_walk_2(self):
         hive = self._get_computer(constants.KEY_READ).local_machine
         self._walk_on_key(hive[r'SYSTEM\CurrentControlSet\Services'])
-
-    def test_walk_3(self):
-        hive = self._get_computer(constants.KEY_READ).local_machine
-        self._walk_on_key(hive)
 
     def test_iteritems(self):
         key = self._computer.local_machine[r'SOFTWARE\Microsoft\Windows NT\CurrentVersion']
