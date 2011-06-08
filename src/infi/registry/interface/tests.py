@@ -44,7 +44,7 @@ class RegCloseKey(BaseTestCase):
         self._assert_func_raises(errors.InvalidHandleException, kwargs)
 
     def test_invalid_key_2(self):
-        kwargs = {'key': 4}
+        kwargs = {'key': 4000}
         self._assert_func_raises(errors.InvalidHandleException, kwargs)
 
     def test_valid_close(self):
@@ -350,8 +350,8 @@ class RegQueryValueEx(TestCaseLocalMachine):
 
     def test_string(self):
         kwargs = {'key': self.key,
-                  'valueName': 'DisplayName'}
-        self.assertEqual('Net Logon', interface.RegQueryValueEx(**kwargs).to_python_object())
+                  'valueName': 'ObjectName'}
+        self.assertEqual('LocalSystem', interface.RegQueryValueEx(**kwargs).to_python_object())
 
     def test_dword(self):
         kwargs = {'key': self.key,
@@ -361,7 +361,8 @@ class RegQueryValueEx(TestCaseLocalMachine):
     def test_exand_sz(self):
         kwargs = {'key': self.key,
                   'valueName': 'ImagePath'}
-        self.assertEqual(u'%SystemRoot%\system32\lsass.exe', interface.RegQueryValueEx(**kwargs).to_python_object())
+        self.assertEqual(u'%SystemRoot%\system32\lsass.exe'.lower(),
+                         interface.RegQueryValueEx(**kwargs).to_python_object().lower())
 
     def test_base_exception(self):
         kwargs = {'key':-1, 'valueName':'m0she'}
@@ -389,7 +390,7 @@ class RegOpenKeyEx(TestCaseLocalMachine):
 
     def test_valid_key(self):
         kwargs = {'key': self.key,
-                  'subKey': 'HotFix'}
+                  'subKey': 'Terminal Server'}
         self.assertGreater(interface.RegOpenKeyEx(**kwargs), 0)
 
     def test_base_exception(self):
