@@ -109,11 +109,6 @@ class RegConnectRegistry(BaseTestCase):
                   'key': constants.HKEY_LOCAL_MACHINE}
         self._assert_func_raises(errors.RemoteRegistryConnectionFailed, kwargs)
 
-    def test_connect_to_unauthorized_remote(self):
-        kwargs = {'machineName': r'\\127.0.0.2',
-                  'key': constants.HKEY_LOCAL_MACHINE}
-        self._assert_func_raises(errors.AccessDeniedException, kwargs)
-
     def test_base_exception(self):
         kwargs = {'machineName':None, 'key':constants.HKEY_LOCAL_MACHINE}
         self._test_base_exception(kwargs, errors.ConnectRegistryFailed)
@@ -205,8 +200,8 @@ class RegDeleteKey(TestCaseLocalMachine):
         interface.RegCloseKey(interface.RegCreateKeyEx(key, 'TestDeleteSubkeyWithSubkeys'))
         interface.RegCloseKey(key)
         kwargs = {'key': self.key,
-                  'subKey': 'TestCaseKey'}
-        self._assert_func_raises(errors.AccessDeniedException, kwargs)
+                  'subKey': 'TestDeleteSubkeyWithSubkeys'}
+        self.assertEqual(None, interface.RegDeleteKey(**kwargs))
 
     def test_delete_subkey_with_values(self):
         key = interface.RegCreateKeyEx(self.key, u'TestDeleteSubKeyWithValues')
