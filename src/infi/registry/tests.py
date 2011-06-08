@@ -36,7 +36,7 @@ class TestCase(unittest2.TestCase):
         raise NotImplementedError
 
 class LocalMachineTestCase(TestCase):
-    def _get_computer(self, sam=constants.KEY_ALL_ACCESS):
+    def _get_computer(self, sam=constants.KEY_READ):
         return LocalComputer(sam=sam)
 
     def test_hives_exists(self):
@@ -130,7 +130,7 @@ class LocalMachineTestCase(TestCase):
         return ''.join(random.choice(string.ascii_letters + string.digits) for x in range(length))
 
     def test_a_workout(self):
-        software = self._computer.local_machine['SOFTWARE']
+        software = self.get_computer(constants.KET_READ).local_machine['SOFTWARE']
         hive_name = self._get_random_string()
         self.assertNotIn(hive_name, software)
         software[hive_name] = None
