@@ -130,7 +130,7 @@ class LocalMachineTestCase(TestCase):
         return ''.join(random.choice(string.ascii_letters + string.digits) for x in range(length))
 
     def test_a_workout(self):
-        software = self._get_computer(constants.KEY_READ).local_machine['SOFTWARE']
+        software = self._get_computer(constants.KEY_ALL_ACCESS).local_machine['SOFTWARE']
         hive_name = self._get_random_string()
         self.assertNotIn(hive_name, software)
         software[hive_name] = None
