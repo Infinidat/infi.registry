@@ -76,7 +76,7 @@ class RegConnectRegistry(BaseTestCase):
                   'key': constants.HKEY_CURRENT_USER}
         self._assert_func_raises(ValueError, kwargs)
 
-    @mock.patch("infi.registry.interface._RegConnectRegistryW")
+    @mock.patch("infi.registry.c_api.RegConnectRegistryW")
     def test_valid_remote_keys(self, mocked_function):
         mocked_function.return_value = None
         kwargs = {'machineName': 'remoteComputer'}
@@ -85,7 +85,7 @@ class RegConnectRegistry(BaseTestCase):
             self.assertEqual(None, interface.RegConnectRegistry(**kwargs))
         self.assertEqual(2, mocked_function.call_count)
 
-    @mock.patch("infi.registry.interface._RegConnectRegistryW")
+    @mock.patch("infi.registry.c_api.RegConnectRegistryW")
     def test_valid_local_keys(self, mocked_function):
         mocked_function.return_value = None
         kwargs = {'machineName': None}

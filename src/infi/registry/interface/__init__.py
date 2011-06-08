@@ -18,19 +18,11 @@ def RegCloseKey(key):
     Closing a closed handle doesn't raise an exception
     """
     try:
-        return _RegCloseKey(key)
-    except WindowsError, exception:
-        if _is_invalid_handle(exception):
-            raise InvalidHandleException
+        return c_api.RegCloseKey(key)
+    except errors.WindowsError, exception:
+        errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise CloseKeyFailed
-
-def _RegConnectRegistryW(*args, **kwargs):
-    _prototype = WINFUNCTYPE(LONG, LPCWSTR, HKEY, POINTER(HKEY))
-    _parameters = (1, 'computerName'), (1, 'key'), (2, 'result')
-    _function = _prototype(("RegConnectRegistryW", windll.advapi32), _parameters)
-    _function.errcheck = _raise_exception_if_necessary
-    return _function(*args, **kwargs)
+        raise errors.CloseKeyFailed
 
 def RegConnectRegistry(machineName, key):
     """ Establishes a connection to a predefined registry handle on another computer.
@@ -58,26 +50,15 @@ def RegConnectRegistry(machineName, key):
         raise ValueError
 
     try:
-        return _RegConnectRegistryW(machineName, key)
-    except WindowsError, exception:
-        if _is_connection_failed(exception):
-            raise RemoteRegistryConnectionFailed(exception.winerror, exception.strerror)
-        if _is_access_defined(exception):
-            raise AccessDeniedException
-        raise ConnectRegistryFailed
+        return c_api.RegConnectRegistryW(machineName, key)
+    except errors.WindowsError, exception:
+        errors.catch_and_raise_general_errors(exception)
+        logging.exception(exception)
+        raise errors.ConnectRegistryFailed
 
-def RegCopyTree(keySrc, subKey, keyDest):
+def RegCopyTree():
     # TODO Implement RegCopyTree
     raise NotImplementedError # pragma: no cover
-
-def _RegCreateKeyExW(*args, **kwargs):
-    _prototype = WINFUNCTYPE(LONG, HKEY, LPCWSTR, DWORD, LPCWSTR, DWORD, DWORD,
-                             POINTER(SECURITY_ATTRIBUTES), POINTER(HKEY), POINTER(DWORD))
-    _parameters = (1, 'key'), (1, 'subKey'), (1, 'reserved'), (1, 'classType'), (1, 'options'), \
-                    (1, 'samDesired'), (1, 'securityAttributes'), (2, 'result'), (2, 'disposition')
-    _function = _prototype(("RegCreateKeyExW", windll.advapi32), _parameters)
-    _function.errcheck = _raise_exception_if_necessary
-    return _function(*args, **kwargs)
 
 def RegCreateKeyEx(key, subKey, samDesired=constants.KEY_ALL_ACCESS):
     """ Creates the specified key, or opens the key if it already exists.
@@ -97,24 +78,14 @@ def RegCreateKeyEx(key, subKey, samDesired=constants.KEY_ALL_ACCESS):
     This function does not support the transaction, options and securityAttributes arguments.
     """
     try:
-        return _RegCreateKeyExW(key, subKey, 0, None, 0, samDesired, None)[0]
-    except WindowsError, exception:
-        if _is_invalid_handle(exception):
-            raise InvalidHandleException
-        if _is_access_defined(exception):
-            raise AccessDeniedException
+        return c_api.RegCreateKeyExW(key, subKey, 0, None, 0, samDesired, None)[0]
+    except errors.WindowsError, exception:
+        errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise CreateKeyFailed(exception.winerror, exception.strerror)
+        raise errors.CreateKeyFailed(exception.winerror, exception.strerror)
 
 def RegCreateKeyTransacted():
     raise NotImplementedError # pragma: no cover
-
-def _RegDeleteKeyW(*args, **kwargs):
-    _prototype = WINFUNCTYPE(LONG, HKEY, LPCWSTR)
-    _parameters = (1, 'key'), (1, 'subKey'),
-    _function = _prototype(("RegDeleteKeyW", windll.advapi32), _parameters)
-    _function.errcheck = _raise_exception_if_necessary
-    return _function(*args, **kwargs)
 
 def RegDeleteKey(key, subKey):
     """ Deletes the specified key.  The calling process must have KEY_DELETE access rights.
@@ -130,7 +101,7 @@ def RegDeleteKey(key, subKey):
     If the function succeeds, it returns None
     If the function fails, it raises a DeleteKeyFailed exception, unless:
     If the key is not open, an InvalidHandleException is raised
-    If subKey is None, the function raises a TypeError
+    If subKey is None, the function raises a InvalidParameterException
     if subKey does not exist, a KeyError exception is raised
     If subKey contains subKey, an AccessDeniedException will be raised
     In case of bad permissions, an AccessDeniedException will be raised
@@ -140,9 +111,9 @@ def RegDeleteKey(key, subKey):
     except errors.WindowsError, exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise DeleteKeyFailed(exception.winerror, exception.strerror)
+        raise errors.DeleteKeyFailed(exception.winerror, exception.strerror)
 
-def RegDeleteKeyEx(key, subKey, samDesired=constants.KEY_ALL_ACCESS):
+def RegDeleteKeyEx():
     # This is supported only Windows 64bit
     # TODO Implement RegDeleteKeyEx
     raise NotImplementedError #pragma: no cover
@@ -151,16 +122,9 @@ def RegDeleteKeyTransacted():
     # TODO Implement RegDeleteKeyTransacted
     raise NotImplementedError #pragma: no cover
 
-def RegDeleteKeyValue(key, subKey=None, valueName=None):
+def RegDeleteKeyValue():
     # TODO Implement RegDeleteKeyValue
     raise NotImplementedError #pragma: no cover
-
-def _RegDeleteValueW(*args, **kwargs):
-    _prototype = WINFUNCTYPE(LONG, HKEY, LPCWSTR)
-    _parameters = (1, 'key'), (1, "valueName"),
-    _function = _prototype(("RegDeleteValueW", windll.advapi32), _parameters)
-    _function.errcheck = _raise_exception_if_necessary
-    return _function(*args, **kwargs)
 
 def RegDeleteValue(key, valueName=None):
     """ Removes the specified value from the specified registry key .
@@ -181,7 +145,7 @@ def RegDeleteValue(key, valueName=None):
     except errors.WindowsError, exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise DeleteValueFailed(exception.winerror, exception.strerror)
+        raise errors.DeleteValueFailed(exception.winerror, exception.strerror)
 
 def RegDisablePredefinedCahce():
     raise NotImplementedError #pragma: no cover
@@ -194,20 +158,6 @@ def RegDisableReflectionKey():
 
 def RegEnableReflectionKey():
     raise NotImplementedError #pragma: no cover
-
-def _RegEnumKeyExW(*args, **kwargs):
-    _prototype = WINFUNCTYPE(LONG, HKEY, DWORD, wintypes.LPWSTR, POINTER(DWORD), POINTER(DWORD),
-                             LPWSTR, POINTER(DWORD), POINTER(FILETIME))
-    _parameters = (1, 'key'), (1, "index"), \
-                  (2, 'name', create_unicode_buffer(constants.MAX_KEYNAME_LENGTH)), \
-                  (3, 'nameSize', DWORD(constants.MAX_KEYNAME_LENGTH)), \
-                  (0, 'reserved', None), \
-                  (3, 'classType', create_unicode_buffer(constants.MAX_KEYNAME_LENGTH)), \
-                  (3, 'classTypeSize', DWORD(constants.MAX_KEYNAME_LENGTH)), \
-                  (2, 'lastWriteTime', FILETIME()),
-    _function = _prototype(("RegEnumKeyExW", windll.advapi32), _parameters)
-    _function.errcheck = _raise_exception_if_necessary
-    return _function(*args, **kwargs)
 
 def RegEnumKeyEx(key, index):
     """ Enumerates the subkeys of the specified open registry key. 
@@ -229,31 +179,12 @@ def RegEnumKeyEx(key, index):
     If the index is too large, an IndexError exception is raised
     """
     try:
-        (name, nameSize, classType, classTypeSize, lastWriteTime) = _RegEnumKeyExW(key=key, index=index)
+        (name, nameSize, classType, classTypeSize, lastWriteTime) = c_api.RegEnumKeyExW(key=key, index=index)
         return name.value
-    except WindowsError, exception:
-        if _is_invalid_handle(exception):
-            raise InvalidHandleException
-        if _is_access_defined(exception):
-            raise AccessDeniedException
-        if _is_no_more_items(exception):
-            raise IndexError
+    except errors.WindowsError, exception:
+        errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise RegistryBaseException(exception.winerror, exception.strerror)
-
-def _RegEnumValueW(*args, **kwargs):
-    _prototype = WINFUNCTYPE(LONG, HKEY, DWORD, LPWSTR, POINTER(DWORD), POINTER(DWORD),
-                             POINTER(DWORD), POINTER(BYTE), POINTER(DWORD))
-    _parameters = (1, 'key'), (1, "index"), \
-                  (2, 'valueName', create_unicode_buffer(constants.MAX_VALUENAME_LENGTH)), \
-                  (3, 'valueNameSize', DWORD(constants.MAX_VALUENAME_LENGTH)), \
-                  (0, 'reserved', None), \
-                  (2, 'valueType', DWORD()), \
-                  (3, 'valueData', (BYTE * 0).from_address(0)), \
-                  (3, 'valueDataSize', DWORD(0)),
-    _function = _prototype(("RegEnumValueW", windll.advapi32), _parameters)
-    _function.errcheck = _raise_exception_if_necessary
-    return _function(*args, **kwargs)
+        raise errors.RegistryBaseException(exception.winerror, exception.strerror)
 
 def RegEnumValue(key, index):
     """ Enumerates the values for the specified open registry key. 
@@ -284,14 +215,7 @@ def RegEnumValue(key, index):
     except errors.WindowsError, exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise RegistryBaseException(exception.winerror, exception.strerror)
-
-def _RegFlushKey(*args, **kwargs):
-    _prototype = WINFUNCTYPE(LONG, HKEY)
-    _parameters = (1, 'key'),
-    _function = _prototype(("RegFlushKey", windll.advapi32), _parameters)
-    _function.errcheck = _raise_exception_if_necessary
-    return _function(*args, **kwargs)
+        raise errors.RegistryBaseException(exception.winerror, exception.strerror)
 
 def RegFlushKey(key):
     """ Writes all the attributes of the specified open registry key into the registry
@@ -309,7 +233,7 @@ def RegFlushKey(key):
     except errors.WindowsError, exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise FlushKeyError
+        raise errors.FlushKeyError
 
 def RegGetKeySecurity():
     raise NotImplementedError #pragma: no cover
@@ -337,33 +261,11 @@ def RegOpenKeyEx(key, subKey=None, samDesired=constants.KEY_ALL_ACCESS):
     This function does not support the transaction, options and securityAttributes arguments.
     """
     try:
-        return _RegOpenKeyExW(key, subKey, 0, samDesired)
-    except WindowsError, exception:
-        if _is_invalid_handle(exception):
-            raise InvalidHandleException
-        if _is_access_defined(exception):
-            raise AccessDeniedException
-        if _is_subkey_not_found(exception):
-            raise KeyError
+        return c_api.RegOpenKeyExW(key, subKey, 0, samDesired)
+    except errors.WindowsError, exception:
+        errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise OpenKeyFailed(exception.winerror, exception.strerror)
-    raise NotImplementedError
-
-def _RegQueryInfoKeyW(*args, **kwargs):
-    _prototype = WINFUNCTYPE(LONG, HKEY, LPWSTR, POINTER(DWORD), POINTER(DWORD),
-                             POINTER(DWORD), POINTER(DWORD), POINTER(DWORD),
-                             POINTER(DWORD), POINTER(DWORD), POINTER(DWORD),
-                             POINTER(DWORD), POINTER(FILETIME))
-    _parameters = (1, 'key'), \
-                  (2, 'classType', create_unicode_buffer(constants.MAX_KEYNAME_LENGTH)), \
-                  (3, 'classTypeLength', DWORD(constants.MAX_KEYNAME_LENGTH)), \
-                  (0, 'reserved', None), (2, 'subKeys'), (2, 'maxSubKeyLength'), \
-                  (2, 'maxClassTypeLength'), (2, 'values'), (2, 'maxValueNameLength'), \
-                  (2, 'maxValueLength',), (2, 'securityDescriptor'), \
-                  (2, 'lastWriteTime')
-    _function = _prototype(("RegQueryInfoKeyW", windll.advapi32), _parameters)
-    _function.errcheck = _raise_exception_if_necessary
-    return _function(*args, **kwargs)
+        raise errors.OpenKeyFailed(exception.winerror, exception.strerror)
 
 def RegQueryInfoKey(key):
     """Retreived information about the specified registry key
@@ -382,16 +284,12 @@ def RegQueryInfoKey(key):
     If the key is not open, an InvalidHandleException is raised
     """
     try:
-        result = _RegQueryInfoKeyW(key)
+        result = c_api.RegQueryInfoKeyW(key)
         return result[2:8]
-    except WindowsError, exception:
-        if _is_invalid_handle(exception):
-            raise InvalidHandleException
-        if _is_access_defined(exception):
-            raise AccessDeniedException
+    except errors.WindowsError, exception:
+        errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
-        raise QueryInfoKeyFailed(exception.winerror, exception.strerror)
-    raise NotImplementedError
+        raise errors.QueryInfoKeyFailed(exception.winerror, exception.strerror)
 
 def RegQueryValueEx(key, valueName=None):
     """ Retrieves the type and data for the specified registry value.
