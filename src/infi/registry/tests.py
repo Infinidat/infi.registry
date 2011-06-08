@@ -59,7 +59,7 @@ class LocalMachineTestCase(TestCase):
             for subkey in key.itervalues():
                 try:
                     self._walk_on_key(subkey, level + 1)
-                except errors.AccessDeniedException:
+                except (errors.AccessDeniedException, KeyError):
                     pass
         except errors.AccessDeniedException:
             pass
