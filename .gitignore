@@ -33,3 +33,5 @@ dist/
 .svn/
 .hg/
 
+setup.py
+None
