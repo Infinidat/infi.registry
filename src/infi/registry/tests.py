@@ -1,6 +1,6 @@
 
 import logging
-import unittest2
+import unittest
 import mock
 from bunch import Bunch
 
@@ -25,7 +25,7 @@ class MockedInterface(object):
     def stop(self):
         self.patcher.stop()
 
-class TestCase(unittest2.TestCase):
+class TestCase(unittest.TestCase):
     def setUp(self):
         self._computer = self._get_computer()
 
@@ -36,6 +36,12 @@ class TestCase(unittest2.TestCase):
         raise NotImplementedError
 
 class LocalMachineTestCase(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        from os import name
+        if name != 'nt':
+            raise unittest.SkipTest("Windows only")
+
     def _get_computer(self, sam=constants.KEY_READ):
         return LocalComputer(sam=sam)
 
@@ -158,7 +164,7 @@ class LocalMachineTestCase(TestCase):
 
     def test_clear_key_with_subkeys(self):
         # TODO implement this important test
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
 class MockLocalMachineTestCase(LocalMachineTestCase):
     def setUp(self):
@@ -209,16 +215,16 @@ class MockLocalMachineTestCase(LocalMachineTestCase):
         self._assert_calls_to_open_key(4)
 
     def test_walk_1(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
     def test_walk_2(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
     def test_walk_3(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
     def test_a_workout(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
     def _prepare_mocks_for_iteration_tests(self):
         self._mocks.query_info_key.mock.return_value = [10, 0, 0, 10]
