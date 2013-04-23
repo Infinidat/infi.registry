@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import unittest2
+import unittest
 import mock
 import os
 from .. import interface, constants, dtypes, errors, funcs, c_api
@@ -10,7 +10,7 @@ from .. import interface, constants, dtypes, errors, funcs, c_api
 class SameAsValue(object):
     pass
 
-class BaseTestCase(unittest2.TestCase):
+class BaseTestCase(unittest.TestCase):
     _regtype = None
 
     def _get_factory(self):
@@ -66,7 +66,7 @@ class RegLink(RegSz):
     _regtype = constants.REG_LINK
 
     def test_detect_type(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
 class RegMultiSz(BaseTestCase):
     _regtype = constants.REG_MULTI_SZ

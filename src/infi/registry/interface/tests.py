@@ -2,14 +2,14 @@
 # -*- coding: utf-8 -*-
 
 import logging
-import unittest2
+import unittest
 import mock
 import os
 from .. import interface, constants, dtypes, errors, funcs, c_api
 from ..dtypes import LPWSTR, LPCWSTR
 
 
-class BaseTestCase(unittest2.TestCase):
+class BaseTestCase(unittest.TestCase):
     def _get_tested_function(self):
         return getattr(interface, self.__class__.__name__, None)
 
@@ -20,9 +20,9 @@ class BaseTestCase(unittest2.TestCase):
 
     def setUp(self):
         if os.name != 'nt':
-            raise unittest2.SkipTest
+            raise unittest.SkipTest
         if not self._get_tested_api_function().is_available_on_this_platform():
-            raise unittest2.SkipTest
+            raise unittest.SkipTest
 
     def tearDown(self):
         pass
@@ -52,7 +52,7 @@ class RegCloseKey(BaseTestCase):
         self.assertEqual(None, interface.RegCloseKey(open_key))
 
     def _get_open_key(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
         HKLM = interface.RegConnectRegistry(None, constants.HKEY_LOCAL_MACHINE)
         return interface.RegCreateKeyEx(HKLM, 'SOFTWARE')
 
@@ -139,7 +139,7 @@ class RegCreateKeyEx(TestCaseLocalMachine):
 
     def test_access_denied(self):
         # TODO Implement test_access_denied
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
     def test_closed_key(self):
         self.tearDown()
@@ -238,10 +238,10 @@ class RegDeleteValue(TestCaseLocalMachine):
         self._assert_func_raises(KeyError, kwargs)
 
     def test_valid_value_name(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
     def test_access_denied(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
     def test_null_value_name(self):
         kwargs = {'key': self.key,
@@ -340,7 +340,7 @@ class RegQueryValueEx(TestCaseLocalMachine):
         self._assert_func_raises(KeyError, kwargs)
 
     def test_access_denied(self):
-        raise unittest2.SkipTest
+        raise unittest.SkipTest
 
     def test_null_value_name(self):
         # TODO add more tests on more value
