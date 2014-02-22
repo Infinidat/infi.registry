@@ -37,3 +37,4 @@ setup.py
 None
 bootstrap.py
 .cache
+eggs
