@@ -36,3 +36,4 @@ dist/
 setup.py
 None
 bootstrap.py
+.cache
