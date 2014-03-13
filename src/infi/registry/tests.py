@@ -2,7 +2,7 @@
 import logging
 import unittest
 import mock
-from bunch import Bunch
+from munch import Munch
 
 import random
 import string
@@ -173,7 +173,7 @@ class MockLocalMachineTestCase(LocalMachineTestCase):
         LocalMachineTestCase.setUp(self)
 
     def _set_mocks_dictionary(self):
-        self._mocks = Bunch()
+        self._mocks = Munch()
         self._mocks.connect_registry = MockedInterface('RegConnectRegistry')
         self._mocks.open_key = MockedInterface('RegOpenKeyEx')
         self._mocks.query_value = MockedInterface('RegQueryValueEx')
