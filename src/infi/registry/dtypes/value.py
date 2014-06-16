@@ -1,8 +1,9 @@
 
 import logging
 from ctypes import addressof, sizeof, c_wchar, create_unicode_buffer
+from ctypes import c_byte as BYTE
 from .. import constants
-from ..dtypes import BYTE
+
 
 INTERVAL = sizeof(c_wchar)
 
