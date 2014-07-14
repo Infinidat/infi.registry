@@ -96,10 +96,10 @@ class ValueStore(DictLikeInterface):
         return self._key_store._getitem_registry_value(item)
 
     def __setitem__(self, item, value):
-        if isinstance(value, (dtypes.value.RegistryValue,)):
+        if isinstance(value, (dtypes.RegistryValue,)):
             self._key_store._write_registry_value(item, value)
         else:
-            return self.__setitem__(item, dtypes.value.RegistryValueFactory().by_value(value))
+            return self.__setitem__(item, dtypes.RegistryValueFactory().by_value(value))
 
     def __delitem__(self, item):
         self._key_store._delete_registry_value(item)
