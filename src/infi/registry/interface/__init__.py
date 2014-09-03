@@ -2,18 +2,19 @@ __import__("pkg_resources").declare_namespace(__name__)
 
 import logging
 from .. import constants, c_api, errors, dtypes
+from ..value import RegistryValueFactory
 
 def RegCloseKey(key):
     """ Closes a handle to the specified registry key
-    
+
     Parameters
     key    A handle to the open key to be closed
-    
+
     Return Value
     If the function succeeds, the return value is None.
     Else, a CloseKeyFailed exception is raised, unless:
     The handle is invalid, and an InvalidHandleException is raised
-    
+
     Notes
     Closing a closed handle doesn't raise an exception
     """
@@ -26,18 +27,18 @@ def RegCloseKey(key):
 
 def RegConnectRegistry(machineName, key):
     """ Establishes a connection to a predefined registry handle on another computer.
-    
+
     Parameters
     machineName    The name of the remote computer, of the form \\computername. If None, the local computer is used.
-    key            The predefined registry handle. On a remote computer, only HKEY_LOCAL_MACHINE and HKEY_USERS are allowed. 
-    
-    Return Value 
+    key            The predefined registry handle. On a remote computer, only HKEY_LOCAL_MACHINE and HKEY_USERS are allowed.
+
+    Return Value
     If the function succeeds, it returns a key handle identifying the predefined handle on the remote computer.
     If the fuction fails, a ConnectRegistryFailed exception is raised, unless:
     If the predefined key is not allowed, an ValueError exception is raised.
     If the connection to the remote computer has failed, a RemoteRegistryConnectionFailed exception is raised, unless:
     If the connection failed, an AccessDeniedException will be raised
-    
+
     Notes
     This function does not support the additional predefined handles added in Windows Vista
     """
@@ -62,18 +63,18 @@ def RegCopyTree():
 
 def RegCreateKeyEx(key, subKey, samDesired=constants.KEY_ALL_ACCESS):
     """ Creates the specified key, or opens the key if it already exists.
-    
+
     Parameters
     key        An already open key. The calling process must have KEY_CREATE_SUB_KEY access to the key.
     subKey     The name of a key that this method opens or creates.
                This key must be a subkey of the key identified by the key parameter
-    
+
     Return Value
     The return value is the handle of the opened key.
     If the function fails, a CreateKeyFailed exception is raised, unless:
     In case of bad permissions, an AccessDeniedException is raised
     If the key is not open, an InvalidHandleException is raised
-    
+
     Notes
     This function does not support the transaction, options and securityAttributes arguments.
     """
@@ -90,13 +91,13 @@ def RegCreateKeyTransacted():
 def RegDeleteKey(key, subKey):
     """ Deletes the specified key.  The calling process must have KEY_DELETE access rights.
     This method can not delete keys with subkeys.
-    
+
     Parameters
     key     An already open key.
-    subKey  The name of the key to delete, in string format 
+    subKey  The name of the key to delete, in string format
             This key must be a subkey of the key identifier by the key parameter.
             This value must not be None, and the key cannot have subkeys.
-    
+
     Return Value
     If the function succeeds, it returns None
     If the function fails, it raises a DeleteKeyFailed exception, unless:
@@ -128,11 +129,11 @@ def RegDeleteKeyValue():
 
 def RegDeleteValue(key, valueName=None):
     """ Removes the specified value from the specified registry key .
-    
+
     Parameters
     key         A handle to an open registry key. The Key must have been opened with the KEY_SET_VALUE access right.
     valueName   The registry value to be removed from the key. If None, the default value is cleared
-    
+
     Return Value
     If the function succeeds, the return value is None
     If the function fails, a DeleteKeyValueFailed exception is raised, unless:
@@ -160,17 +161,17 @@ def RegEnableReflectionKey():
     raise NotImplementedError #pragma: no cover
 
 def RegEnumKeyEx(key, index):
-    """ Enumerates the subkeys of the specified open registry key. 
+    """ Enumerates the subkeys of the specified open registry key.
     The function retrieves information about one subkey each time it is called.
 
     Parameters
-    key         A handle to an open registry key. 
+    key         A handle to an open registry key.
                 The key must have been opened with the KEY_ENUMERATE_SUB_KEYS access right
-    index       The index of the subkey to retrieve. This parameter should be zero for the first call to the 
+    index       The index of the subkey to retrieve. This parameter should be zero for the first call to the
                 RegEnumKeyEx function and then incremented for subsequent calls.
-                Because subkeys are not ordered, any new subkey will have an arbitrary index. 
+                Because subkeys are not ordered, any new subkey will have an arbitrary index.
                 This means that the function may return subkeys in any order.
-    
+
     Return Value
     If the function succeeds, the return value is the name of the subkey.
     If the function fails, a RegistryBaseException is raised, unless:
@@ -187,18 +188,18 @@ def RegEnumKeyEx(key, index):
         raise errors.RegistryBaseException(exception.winerror, exception.strerror)
 
 def RegEnumValue(key, index):
-    """ Enumerates the values for the specified open registry key. 
+    """ Enumerates the values for the specified open registry key.
     The function copies one indexed value name and data block for the key each time it is called.
 
 
     Parameters
-    key         A handle to an open registry key. 
+    key         A handle to an open registry key.
                 The key must have been opened with the KEY_QUERY_VALUE access right
-    index       The index of the subkey to retrieve. This parameter should be zero for the first call to the 
+    index       The index of the subkey to retrieve. This parameter should be zero for the first call to the
                 RegEnumKeyEx function and then incremented for subsequent calls.
-                Because subkeys are not ordered, any new subkey will have an arbitrary index. 
+                Because subkeys are not ordered, any new subkey will have an arbitrary index.
                 This means that the function may return subkeys in any order.
-    
+
     Return Value
     If the function succeeds, the return a tuple of the value's name and RegistryValue object data.
     If the function fails, a RegistryBaseException exception is raised, unless:
@@ -211,7 +212,7 @@ def RegEnumValue(key, index):
         data = (dtypes.BYTE * dataLength.value)()
         (name, nameSize, dataType, data, dataLength) = c_api.RegEnumValueW(key=key, index=index,
                                                                     data=data, dataLength=dataLength)
-        return name.value, dtypes.RegistryValueFactory().by_type(dataType)(data)
+        return name.value, RegistryValueFactory().by_type(dataType)(data)
     except errors.WindowsError, exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
@@ -219,10 +220,10 @@ def RegEnumValue(key, index):
 
 def RegFlushKey(key):
     """ Writes all the attributes of the specified open registry key into the registry
-    
+
     Parameters
     key    A handle to the open key to be closed
-    
+
     Return Value
     If the function succeeds, the return value is None.
     Else, a FlushKeyError exception is raised, unless:
@@ -244,19 +245,19 @@ def RegLoadKey():
 
 def RegOpenKeyEx(key, subKey=None, samDesired=constants.KEY_ALL_ACCESS):
     """ Opens the specifics registry key.
-    
+
     Parameters
     key            A handle to an open registry key.
     subKey        The name of the registry subkey to be opened. It is optional.
     samDesired    A mask that specifics the desired access rights to the key to be opened.
-    
+
     Return Value
     If the function succeeds, it returns a handle to the opened key
     If the function fails, it raises an OpenKeyFailed exception, unless:
     In case of bad permissions, an AccessDeniedException is raised
     If the key is not open, an InvalidHandleException is raised
     If the subKey does not exist, a KeyError exception is raised
-    
+
     Notes
     This function does not support the transaction, options and securityAttributes arguments.
     """
@@ -269,12 +270,12 @@ def RegOpenKeyEx(key, subKey=None, samDesired=constants.KEY_ALL_ACCESS):
 
 def RegQueryInfoKey(key):
     """Retreived information about the specified registry key
-    
+
     Parameters
     key        A handle to an open registry key.
                The key must have been opened with the KEY_QUERY_VALUE access right.
-    
-    
+
+
     Return Value
     If the function succeeds, it returns a tuple of the following form:
         (subKeys, maxSubKeyLength, maxClassTypeLength, values, maxValueNameLength,
@@ -295,10 +296,10 @@ def RegQueryValueEx(key, valueName=None):
     """ Retrieves the type and data for the specified registry value.
 
     Parameters
-    key         A handle to an open registry key. 
+    key         A handle to an open registry key.
                 The key must have been opened with the KEY_QUERY_VALUE access right
     valueName   The name of the registry value. it is optional.
-    
+
     Return Value
     If the function succeeds, the return a tuple of the value's name and RegistryValue object data.
     If the function fails, a RegistryBaseException exception is raised, unless:
@@ -311,7 +312,7 @@ def RegQueryValueEx(key, valueName=None):
         data = (dtypes.BYTE * dataLength.value)()
         (dataType, data, dataLength) = c_api.RegQueryValueExW(key=key, name=valueName,
                                                             data=data, dataLength=dataLength)
-        return dtypes.RegistryValueFactory().by_type(dataType)(data)
+        return RegistryValueFactory().by_type(dataType)(data)
     except errors.WindowsError, exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
@@ -338,15 +339,15 @@ def RegSetKeyValue():
 
 def RegSetValueEx(key, valueName, valueData):
     """ Sets the data and type of a specified value under a registry key
-    
+
     Parameters
-    key             A handle to an open registry key. 
+    key             A handle to an open registry key.
                     The key must have been opened with the KEY_SET_VALUE access right.
     valueName       The name of the value to be set.
                     If it is None or an empty string, the function sets the type and data
-                    for the key's unnamed or default value. 
+                    for the key's unnamed or default value.
     valueDataType   the type of data.
-    
+
     Return Value
     If the function succeeds, it returns None.
     If the function fails, a RegistryBaseException exception is raised, unless:
@@ -356,7 +357,7 @@ def RegSetValueEx(key, valueName, valueData):
     """
     from ctypes import sizeof
     try:
-        regvalue = dtypes.RegistryValueFactory().by_value(valueData)
+        regvalue = RegistryValueFactory().by_value(valueData)
         data, dataType = regvalue.to_byte_array(), regvalue.registry_type
         result = c_api.RegSetValueExW(key=key, name=valueName, dataType=dataType,
                                       data=data, dataLength=sizeof(data))

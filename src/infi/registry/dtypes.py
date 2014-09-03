@@ -1,5 +1,3 @@
-__import__("pkg_resources").declare_namespace(__name__)
-
 from ctypes import Structure, create_unicode_buffer
 from ctypes import POINTER
 from ctypes import c_byte as BYTE
@@ -19,7 +17,3 @@ class SECURITY_ATTRIBUTES(Structure):
 class FILETIME(Structure):
     _fields = [("dwLowDateTime", DWORD),
                ("dwHighDateTime", DWORD)]
-
-
-from .value import RegBinary, RegDword, RegExpandSz, RegistryValue, \
-                   RegistryValueFactory, RegLink, RegMultiSz, RegQword, RegSz

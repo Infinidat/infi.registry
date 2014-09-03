@@ -5,7 +5,9 @@ import logging
 import unittest
 import mock
 import os
-from .. import interface, constants, dtypes, errors, funcs, c_api
+from . import interface, constants, errors, funcs, c_api
+from . import value
+RegistryValueFactory = value.RegistryValueFactory
 
 class SameAsValue(object):
     pass
@@ -14,7 +16,7 @@ class BaseTestCase(unittest.TestCase):
     _regtype = None
 
     def _get_factory(self):
-        return dtypes.RegistryValueFactory().by_type(self._regtype)
+        return RegistryValueFactory().by_type(self._regtype)
 
     def _test_value_bidirectional(self, value, expected=SameAsValue()):
         regvalue = self._get_factory()(value)
@@ -30,9 +32,9 @@ class BaseTestCase(unittest.TestCase):
     def _test_detected_type(self, value, expected_type_error=False):
         expected = self._regtype
         if expected_type_error:
-            self.assertRaises(TypeError, dtypes.RegistryValueFactory().by_value)
+            self.assertRaises(TypeError, RegistryValueFactory().by_value)
         else:
-            actual = dtypes.RegistryValueFactory().by_value(value).registry_type
+            actual = RegistryValueFactory().by_value(value).registry_type
             self.assertEquals(expected, actual)
 
 class RegSz(BaseTestCase):

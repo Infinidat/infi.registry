@@ -2,7 +2,7 @@
 import logging
 from ctypes import addressof, sizeof, c_wchar, create_unicode_buffer
 from ctypes import c_byte as BYTE
-from .. import constants
+from . import constants
 
 
 INTERVAL = sizeof(c_wchar)
@@ -10,7 +10,7 @@ INTERVAL = sizeof(c_wchar)
 class RegistryValue(object):
     """ A registry value can store data in various formats.
     This class and its sub-class helps translate registry values and their Python objects.
-    
+
     The following table describes the convertion between Registry value types and Python:
     | Registry Value Type    | Python Representation | Notes |
     -------------------------------------------------|-------|
@@ -19,8 +19,8 @@ class RegistryValue(object):
     | REG_EXPAND_SZ          | unicode               |       |
     | REG_LINK               | unicode               |       |
     | REG_MULTI_SZ           | [unicode, ]           |       |
-    | REG_QWORD              | (int, )               | 64bit | 
-    | REG_SZ                 | unicode               |       | 
+    | REG_QWORD              | (int, )               | 64bit |
+    | REG_SZ                 | unicode               |       |
     """
 
     def __init__(self, value):

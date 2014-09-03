@@ -1,8 +1,7 @@
-from infi.registry.dtypes.value import RegistryValueFactory
 __import__("pkg_resources").declare_namespace(__name__)
 
-from dtypes.key import RegistryComputer, LocalComputer, KeyStore
-from dtypes.value import RegistryValue, RegistryValueFactory
+from .key import RegistryComputer, LocalComputer, KeyStore
+from .value import RegistryValue, RegistryValueFactory
 import constants
 import errors
 

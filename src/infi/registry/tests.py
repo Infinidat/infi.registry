@@ -8,10 +8,9 @@ import random
 import string
 
 from . import LocalComputer
-from .dtypes.key import KeyStore, RegistryHive
-from infi.registry.dtypes.key import ValueStore
-from infi.registry.dtypes.value import RegistryValueFactory, RegistryValue
-from infi.registry import constants, errors, dtypes
+from .key import KeyStore, ValueStore, RegistryHive
+from .value import RegistryValueFactory, RegistryValue
+from . import constants, errors, dtypes
 
 class MockedInterface(object):
     def __init__(self, func_name):
@@ -149,7 +148,7 @@ class LocalMachineTestCase(TestCase):
                      (self._get_random_string(), self._get_random_string()),
                      (self._get_random_string(), [self._get_random_string(), self._get_random_string()])):
             self.assertNotIn(k, key.values_store)
-            key.values_store[k] = dtypes.RegistryValueFactory().by_value(v)
+            key.values_store[k] = RegistryValueFactory().by_value(v)
             self.assertIn(k, key.values_store)
             self.assertTrue(key.values_store.has_key(k))
             self.assertEqual(v, key.values_store[k].to_python_object())
