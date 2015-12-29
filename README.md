@@ -39,8 +39,8 @@ The registry values are stored in a dictionary:
 
 Updating a value is easy:
 ```pyhton
->>> from infi.registry import RegistryFactory
->>> factory = RegistryFactory()
+>>> from infi.registry import RegistryValueFactory
+>>> factory = RegistryValueFactory()
 >>> new_value = factory.by_value('this is a string')
 >>> key.values_store['name'] = new_value
 ```

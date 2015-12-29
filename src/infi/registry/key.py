@@ -167,7 +167,7 @@ class KeyStore(DictLikeInterface):
         subkey_handle = interface.RegCreateKeyEx(self._handle, key, self._sam)
 
     def _write_registry_value(self, key, value):
-        interface.RegSetValueEx(self._handle, key, value.to_python_object())
+        interface.RegSetValueEx(self._handle, key, value.to_python_object(), value.registry_type)
 
     def __setitem__(self, item, value=None):
         self._create_registry_subkey(item)

@@ -337,7 +337,7 @@ def RegSaveKeyEx():
 def RegSetKeyValue():
     raise NotImplementedError #pragma: no cover
 
-def RegSetValueEx(key, valueName, valueData):
+def RegSetValueEx(key, valueName, valueData, valueDataType=None):
     """ Sets the data and type of a specified value under a registry key
 
     Parameters
@@ -346,7 +346,8 @@ def RegSetValueEx(key, valueName, valueData):
     valueName       The name of the value to be set.
                     If it is None or an empty string, the function sets the type and data
                     for the key's unnamed or default value.
-    valueDataType   the type of data.
+    valueData       The value data.
+    valueDataType   The type of data.
 
     Return Value
     If the function succeeds, it returns None.
@@ -357,7 +358,10 @@ def RegSetValueEx(key, valueName, valueData):
     """
     from ctypes import sizeof
     try:
-        regvalue = RegistryValueFactory().by_value(valueData)
+        if valueDataType is not None:
+            regvalue = RegistryValueFactory().by_type(valueDataType)(valueData)
+        else:
+            regvalue = RegistryValueFactory().by_value(valueData)
         data, dataType = regvalue.to_byte_array(), regvalue.registry_type
         result = c_api.RegSetValueExW(key=key, name=valueName, dataType=dataType,
                                       data=data, dataLength=sizeof(data))

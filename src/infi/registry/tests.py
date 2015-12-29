@@ -132,7 +132,7 @@ class LocalMachineTestCase(TestCase):
 
     def _get_random_string(self):
         length = random.randint(1, 100)
-        return ''.join(random.choice(string.ascii_letters + string.digits) for x in range(length))
+        return '_TEMP_' + ''.join(random.choice(string.ascii_letters + string.digits) for x in range(length))
 
     def test_a_workout(self):
         software = self._get_computer(constants.KEY_ALL_ACCESS).local_machine['SOFTWARE']
@@ -158,6 +158,18 @@ class LocalMachineTestCase(TestCase):
         self.assertEqual(0, len(key.keys()))
         self.assertEqual(0, len(key.values_store.keys()))
         key.change_permissions(constants.KEY_ALL_ACCESS)
+        del(software[hive_name])
+        self.assertNotIn(hive_name, software)
+
+    def test_create_key_specific_type(self):
+        software = self._get_computer(constants.KEY_ALL_ACCESS).local_machine['SOFTWARE']
+        hive_name = self._get_random_string()
+        self.assertNotIn(hive_name, software)
+        software[hive_name] = None
+        key = software[hive_name]
+        for reg_type in [constants.REG_SZ, constants.REG_EXPAND_SZ]:
+            key.values_store['x'] = RegistryValueFactory().by_type(reg_type)('hellowWorld')
+            self.assertEqual(key.values_store['x'].registry_type, reg_type)
         del(software[hive_name])
         self.assertNotIn(hive_name, software)
 
@@ -223,6 +235,9 @@ class MockLocalMachineTestCase(LocalMachineTestCase):
         raise unittest.SkipTest
 
     def test_a_workout(self):
+        raise unittest.SkipTest
+
+    def test_create_key_specific_type(self):
         raise unittest.SkipTest
 
     def _prepare_mocks_for_iteration_tests(self):

@@ -64,7 +64,7 @@ Let's write some values for demonstration:
 
 If you wish to manually define the type, you can:
 >>> from constants import *
->>> sub_key.values_store['expandString'] = RegistryValueFactory().by_type(REG_EXPAND_SZ).('helloWorld')
+>>> sub_key.values_store['expandString'] = RegistryValueFactory().by_type(REG_EXPAND_SZ)('helloWorld')
 >>> sub_key.values_store['thisIsQword'] = RegistryValueFactory().by_type(REG_QWORD)(3)
 
 That's the basics.
