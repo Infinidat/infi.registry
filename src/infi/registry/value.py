@@ -1,4 +1,4 @@
-from six import integer_types, text_types
+from six import integer_types, string_types
 import logging
 from ctypes import addressof, sizeof, c_wchar, create_unicode_buffer
 from ctypes import c_byte as BYTE
@@ -186,7 +186,7 @@ class RegistryValueFactory(object):
 
     def by_value(self, value, return_instance_instead_of_class=True):
         cls = None
-        if isinstance(value, text_types):
+        if isinstance(value, string_types):
             if value.count('%') >= 2:
                 return self.by_type(constants.REG_EXPAND_SZ)(value)
             # TODO identify symbolic link
@@ -198,7 +198,7 @@ class RegistryValueFactory(object):
             cls = self.by_type(constants.REG_BINARY)
         elif isinstance(value, (list,)):
             for item in value:
-                if not isinstance(item, text_types):
+                if not isinstance(item, string_types):
                     raise TypeError
             # TODO add test that checks the loop here
             cls = self.by_type(constants.REG_MULTI_SZ)
