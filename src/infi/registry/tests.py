@@ -1,4 +1,4 @@
-
+from six import text_type
 import logging
 import unittest
 import mock
@@ -86,11 +86,11 @@ class LocalMachineTestCase(TestCase):
         key = self._computer.local_machine[r'SOFTWARE\Microsoft\Windows NT\CurrentVersion']
         for item in key.iteritems():
             self.assertIsInstance(item[1], KeyStore)
-            self.assertEqual(type(item[0]), unicode)
+            self.assertEqual(type(item[0]), text_type)
             self.assertGreater(len(item[0]), 0)
         for item in key.values_store.iteritems():
             self.assertIsInstance(item[1], RegistryValue)
-            self.assertEqual(type(item[0]), unicode)
+            self.assertEqual(type(item[0]), text_type)
             self.assertGreater(len(item[0]), 0)
 
     def test_items(self):

@@ -259,13 +259,13 @@ class RegEnumKeyEx(TestCaseLocalMachine):
 
     def test_index_0(self):
         result = interface.RegEnumKeyEx(self.key, 0)
-        self.assertNotEquals(None, result)
+        self.assertNotEqual(None, result)
         self.assertGreater(len(result), 0)
 
     def test_index_valid_range(self):
         for index in range(0, 4):
             result = interface.RegEnumKeyEx(self.key, index)
-            self.assertNotEquals(None, result)
+            self.assertNotEqual(None, result)
             self.assertGreater(len(result), 0)
 
     def test_index_outbound_index(self):
@@ -424,14 +424,14 @@ class RegSetValueEx(TestCaseLocalMachine):
         kwargs = {'key': self.key,
                   'valueName': name,
                   'valueData': data}
-        self.assertEquals(None, interface.RegSetValueEx(**kwargs))
-        self.assertEquals(data, interface.RegQueryValueEx(key=self.key, valueName=name).to_python_object())
+        self.assertEqual(None, interface.RegSetValueEx(**kwargs))
+        self.assertEqual(data, interface.RegQueryValueEx(key=self.key, valueName=name).to_python_object())
 
     def test_null_value(self):
         kwargs = {'key': self.key,
                   'valueName': '',
                   'valueData': 'hi'}
-        self.assertEquals(None, interface.RegSetValueEx(**kwargs))
+        self.assertEqual(None, interface.RegSetValueEx(**kwargs))
 
     def test_dword_small(self):
         self._test_set_get_value('dword', 1)

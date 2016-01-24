@@ -2,8 +2,8 @@ __import__("pkg_resources").declare_namespace(__name__)
 
 from .key import RegistryComputer, LocalComputer, KeyStore
 from .value import RegistryValue, RegistryValueFactory
-import constants
-import errors
+from . import constants
+from . import errors
 
 __all__ = ('RegistryComputer', 'LocalComputer', 'KeyStore',
            'RegistryValue', 'RegistryValueFactory', 'constants', 'errors')

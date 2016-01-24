@@ -38,7 +38,8 @@ def wrap_advapi32_function(name, return_value=LONG, parameters=()):
     return _function
 
 def item_to_unicode(item):
+    from six import text_type
     try:
-        return unicode(item)
+        return text_type(item)
     except:
         raise TypeError("item cannot be formatted in unicode")
