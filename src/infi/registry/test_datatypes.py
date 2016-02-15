@@ -27,7 +27,7 @@ class BaseTestCase(unittest.TestCase):
         logging.debug(repr(actual))
         logging.debug(repr(value))
         expected = value if isinstance(expected, SameAsValue) else expected
-        self.assertEquals(expected, actual)
+        self.assertEqual(expected, actual)
 
     def _test_detected_type(self, value, expected_type_error=False):
         expected = self._regtype
@@ -35,7 +35,7 @@ class BaseTestCase(unittest.TestCase):
             self.assertRaises(TypeError, RegistryValueFactory().by_value)
         else:
             actual = RegistryValueFactory().by_value(value).registry_type
-            self.assertEquals(expected, actual)
+            self.assertEqual(expected, actual)
 
 class RegSz(BaseTestCase):
     _regtype = constants.REG_SZ

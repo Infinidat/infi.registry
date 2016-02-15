@@ -1,4 +1,4 @@
-
+from six import integer_types, string_types
 import logging
 from ctypes import addressof, sizeof, c_wchar, create_unicode_buffer
 from ctypes import c_byte as BYTE
@@ -73,7 +73,7 @@ class RegMultiSz(RegistryValue):
         return constants.REG_MULTI_SZ
 
     def to_byte_array(self):
-        strings = filter(lambda x: len(x), self._value)
+        strings = [x for x in self._value if len(x)]
         value = (u'\x00'.join(strings) + u'\x00') if len(strings) else ''
         c_unicode_string = create_unicode_buffer(value)
         factory = BYTE * sizeof(c_unicode_string)
@@ -186,7 +186,7 @@ class RegistryValueFactory(object):
 
     def by_value(self, value, return_instance_instead_of_class=True):
         cls = None
-        if isinstance(value, (str, unicode,)):
+        if isinstance(value, string_types):
             if value.count('%') >= 2:
                 return self.by_type(constants.REG_EXPAND_SZ)(value)
             # TODO identify symbolic link
@@ -198,11 +198,11 @@ class RegistryValueFactory(object):
             cls = self.by_type(constants.REG_BINARY)
         elif isinstance(value, (list,)):
             for item in value:
-                if not isinstance(item, (str, unicode)):
+                if not isinstance(item, string_types):
                     raise TypeError
             # TODO add test that checks the loop here
             cls = self.by_type(constants.REG_MULTI_SZ)
-        elif isinstance(value, (int, long,)):
+        elif isinstance(value, integer_types):
             if value < 2 ** 32:
                 cls = self.by_type(constants.REG_DWORD)
             else:

@@ -39,8 +39,8 @@ The registry values are stored in a dictionary:
 
 Updating a value is easy:
 ```pyhton
->>> from infi.registry import RegistryFactory
->>> factory = RegistryFactory()
+>>> from infi.registry import RegistryValueFactory
+>>> factory = RegistryValueFactory()
 >>> new_value = factory.by_value('this is a string')
 >>> key.values_store['name'] = new_value
 ```
@@ -51,7 +51,11 @@ You can define the value type on our own by using factory.by_type method.
 Checking out the code
 =====================
 
-Run the following:
+To check out the code for development purposes, clone the git repository and run the following commands:
 
     easy_install -U infi.projector
     projector devenv build
+
+Python 3
+========
+Python 3 support is experimental and untested at this stage.

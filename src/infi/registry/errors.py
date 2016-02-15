@@ -3,7 +3,7 @@ import os
 from . import constants
 
 if os.name == 'nt':
-    from __builtin__ import WindowsError
+    from six.moves.builtins import WindowsError
 else:
     WindowsError = OSError
 

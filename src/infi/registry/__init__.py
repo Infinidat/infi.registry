@@ -2,8 +2,8 @@ __import__("pkg_resources").declare_namespace(__name__)
 
 from .key import RegistryComputer, LocalComputer, KeyStore
 from .value import RegistryValue, RegistryValueFactory
-import constants
-import errors
+from . import constants
+from . import errors
 
 __all__ = ('RegistryComputer', 'LocalComputer', 'KeyStore',
            'RegistryValue', 'RegistryValueFactory', 'constants', 'errors')
@@ -64,7 +64,7 @@ Let's write some values for demonstration:
 
 If you wish to manually define the type, you can:
 >>> from constants import *
->>> sub_key.values_store['expandString'] = RegistryValueFactory().by_type(REG_EXPAND_SZ).('helloWorld')
+>>> sub_key.values_store['expandString'] = RegistryValueFactory().by_type(REG_EXPAND_SZ)('helloWorld')
 >>> sub_key.values_store['thisIsQword'] = RegistryValueFactory().by_type(REG_QWORD)(3)
 
 That's the basics.

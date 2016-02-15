@@ -20,7 +20,7 @@ def RegCloseKey(key):
     """
     try:
         return c_api.RegCloseKey(key)
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.CloseKeyFailed
@@ -52,7 +52,7 @@ def RegConnectRegistry(machineName, key):
 
     try:
         return c_api.RegConnectRegistryW(machineName, key)
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.ConnectRegistryFailed
@@ -80,7 +80,7 @@ def RegCreateKeyEx(key, subKey, samDesired=constants.KEY_ALL_ACCESS):
     """
     try:
         return c_api.RegCreateKeyExW(key, subKey, 0, None, 0, samDesired, None)[0]
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.CreateKeyFailed(exception.winerror, exception.strerror)
@@ -109,7 +109,7 @@ def RegDeleteKey(key, subKey):
     """
     try:
         result = c_api.RegDeleteKeyW(key, subKey)
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.DeleteKeyFailed(exception.winerror, exception.strerror)
@@ -143,7 +143,7 @@ def RegDeleteValue(key, valueName=None):
     """
     try:
         result = c_api.RegDeleteValueW(key, valueName)
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.DeleteValueFailed(exception.winerror, exception.strerror)
@@ -182,7 +182,7 @@ def RegEnumKeyEx(key, index):
     try:
         (name, nameSize, classType, classTypeSize, lastWriteTime) = c_api.RegEnumKeyExW(key=key, index=index)
         return name.value
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.RegistryBaseException(exception.winerror, exception.strerror)
@@ -213,7 +213,7 @@ def RegEnumValue(key, index):
         (name, nameSize, dataType, data, dataLength) = c_api.RegEnumValueW(key=key, index=index,
                                                                     data=data, dataLength=dataLength)
         return name.value, RegistryValueFactory().by_type(dataType)(data)
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.RegistryBaseException(exception.winerror, exception.strerror)
@@ -231,7 +231,7 @@ def RegFlushKey(key):
     """
     try:
         return c_api.RegFlushKey(key)
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.FlushKeyError
@@ -263,7 +263,7 @@ def RegOpenKeyEx(key, subKey=None, samDesired=constants.KEY_ALL_ACCESS):
     """
     try:
         return c_api.RegOpenKeyExW(key, subKey, 0, samDesired)
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.OpenKeyFailed(exception.winerror, exception.strerror)
@@ -287,7 +287,7 @@ def RegQueryInfoKey(key):
     try:
         result = c_api.RegQueryInfoKeyW(key)
         return result[2:8]
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.QueryInfoKeyFailed(exception.winerror, exception.strerror)
@@ -313,7 +313,7 @@ def RegQueryValueEx(key, valueName=None):
         (dataType, data, dataLength) = c_api.RegQueryValueExW(key=key, name=valueName,
                                                             data=data, dataLength=dataLength)
         return RegistryValueFactory().by_type(dataType)(data)
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.RegistryBaseException(exception.winerror, exception.strerror)
@@ -337,7 +337,7 @@ def RegSaveKeyEx():
 def RegSetKeyValue():
     raise NotImplementedError #pragma: no cover
 
-def RegSetValueEx(key, valueName, valueData):
+def RegSetValueEx(key, valueName, valueData, valueDataType=None):
     """ Sets the data and type of a specified value under a registry key
 
     Parameters
@@ -346,7 +346,8 @@ def RegSetValueEx(key, valueName, valueData):
     valueName       The name of the value to be set.
                     If it is None or an empty string, the function sets the type and data
                     for the key's unnamed or default value.
-    valueDataType   the type of data.
+    valueData       The value data.
+    valueDataType   The type of data.
 
     Return Value
     If the function succeeds, it returns None.
@@ -357,11 +358,14 @@ def RegSetValueEx(key, valueName, valueData):
     """
     from ctypes import sizeof
     try:
-        regvalue = RegistryValueFactory().by_value(valueData)
+        if valueDataType is not None:
+            regvalue = RegistryValueFactory().by_type(valueDataType)(valueData)
+        else:
+            regvalue = RegistryValueFactory().by_value(valueData)
         data, dataType = regvalue.to_byte_array(), regvalue.registry_type
         result = c_api.RegSetValueExW(key=key, name=valueName, dataType=dataType,
                                       data=data, dataLength=sizeof(data))
-    except errors.WindowsError, exception:
+    except errors.WindowsError as exception:
         errors.catch_and_raise_general_errors(exception)
         logging.exception(exception)
         raise errors.RegistryBaseException(exception.winerror, exception.strerror)
