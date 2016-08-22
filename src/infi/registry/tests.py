@@ -56,7 +56,7 @@ class LocalMachineTestCase(TestCase):
         self.assertIsInstance(reg, KeyStore)
         self.assertIsInstance(reg[r'SOFTWARE\Microsoft'], KeyStore)
         self.assertIsInstance(reg[r'SOFTWARE\Microsoft\Windows'], KeyStore)
-        self.assertIsInstance(reg[ur'SOFTWARE\Microsoft\Windows NT'], KeyStore)
+        self.assertIsInstance(reg[r'SOFTWARE\Microsoft\Windows NT'], KeyStore)
 
     def _walk_on_key(self, key, level=0):
         logging.debug('%s%s' % ('.' * level, key._relapath,))
